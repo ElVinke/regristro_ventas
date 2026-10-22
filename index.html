@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro de ventas</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#667085;--bd:#e3e6ea;--ac:#0f766e;--ac2:#fff;--dg:#b42318;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171a;--card:#1d2125;--tx:#eceff2;--mut:#9aa4af;--bd:#2d333a;--ac:#2dd4bf;--ac2:#06201d;--dg:#f97066;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171a;--card:#1d2125;--tx:#eceff2;--mut:#9aa4af;--bd:#2d333a;--ac:#2dd4bf;--ac2:#06201d;--dg:#f97066;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:8px 0 16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.stat small{color:var(--mut);display:block}
+.stat b{font-size:1.25rem}
+form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+form .full{grid-column:1/-1}
+label{font-size:.85rem;color:var(--mut);display:block;margin-bottom:4px}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+button{padding:11px;border:0;border-radius:8px;background:var(--ac);color:var(--ac2);font:inherit;font-weight:600;cursor:pointer}
+.del{background:none;color:var(--dg);padding:4px 8px}
+.head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.head b{font-size:1.05rem}
+.head button{padding:8px 12px}
+.tot{font-weight:600;text-align:right}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{padding:8px 6px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+th{color:var(--mut);font-weight:500;font-size:.8rem}
+td.n,th.n{text-align:right}
+.empty{color:var(--mut);text-align:center;padding:20px}
+.vc{border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--bg)}
+.vh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
+.vh b{font-size:1.1rem}
+.vh span{font-size:1.3rem;font-weight:700;color:var(--ac);white-space:nowrap;text-align:right}
+.vh span small{display:block;font-size:.7rem;font-weight:600;color:var(--mut)}
+.clr{flex:0 0 100%;display:flex;flex-wrap:wrap;gap:2px 16px;font-size:1.05rem;font-weight:600;margin-top:-2px}
+.vh>div:first-child{flex:1;min-width:0}
+.vg{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.vg small,.vc2 small{display:block;color:var(--mut);font-size:.75rem}
+.vg b,.vc2 b{font-weight:600;word-break:break-word}
+.vc2{margin-bottom:12px}
+.vd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+.alert{background:#fef3c7;color:#78350f;border:1px solid #f59e0b;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.alert b{display:block;margin-bottom:4px}
+.alert div{font-size:.9rem;padding:2px 0}
+.ah{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}
+.alert .ah b{margin:0}
+.ah span{font-size:.85rem;font-weight:600;white-space:nowrap}
+.all{max-height:40vh;overflow-y:auto;margin-top:6px}
+.vc.pend{border:2px solid #f59e0b}
+.st{display:inline-block;font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:10px}
+.st.p{background:#fef3c7;color:#78350f}
+.st.r{background:#d1fae5;color:#065f46}
+.okb{background:#16a34a;color:#fff}
+@media(max-width:480px){.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Registro de ventas</h1>
+<div id="al" class="alert" style="display:none"></div>
+<div class="stats">
+<div class="card stat"><small>Hoy</small><b id="sHoy">$0.00</b></div>
+<div class="card stat"><small>Este mes</small><b id="sMes">$0.00</b></div>
+<div class="card stat"><small>Total</small><b id="sTot">$0.00</b></div>
+</div>
+<form class="card" id="f" novalidate>
+<div class="full"><label for="prod">Producto o servicio</label><input id="prod" required placeholder="Ej. Camisa azul"></div>
+<div><label for="cant">Cantidad</label><input id="cant" type="number" min="1" step="1" value="1" required></div>
+<div><label for="prec">Precio total ($)</label><input id="prec" type="text" inputmode="decimal" placeholder="0.00"></div>
+<div><label for="fecha">Fecha</label><input id="fecha" type="date" required></div>
+<div><label for="pago">Pago</label><select id="pago"><option>Efectivo</option><option>Transferencia</option></select></div>
+<div><label for="cli">Nombre del cliente</label><input id="cli"></div>
+<div><label for="tel">Número de contacto</label><input id="tel" type="tel" inputmode="tel"></div>
+<div class="full"><label for="ent">Entrega</label><select id="ent"><option>Plaza Centro</option><option>Metropolitano</option><option>Encomendista</option></select></div>
+<div class="full" id="encw" style="display:none"><label>Encomendista</label><div style="display:flex;gap:20px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:6px;margin:0;color:var(--tx);font-size:1rem"><input type="radio" name="enc" value="C807" style="width:auto"> C807</label><label style="display:flex;align-items:center;gap:6px;margin:0;color:var(--tx);font-size:1rem"><input type="radio" name="enc" value="Pedidos Express" style="width:auto"> Pedidos Express</label></div></div>
+<div class="full"><label for="com">Comentarios</label><input id="com"></div>
+<div id="err" class="full" style="color:var(--dg);font-size:.9rem;display:none"></div>
+<button class="full" type="submit" id="sb">Registrar venta</button>
+<button class="full" type="button" id="cx" style="display:none;background:none;color:var(--tx);border:1px solid var(--bd)">Cancelar edición</button>
+</form>
+<div class="card">
+<div class="head"><b>Ventas</b><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="exp" type="button">Exportar a Excel</button><button id="rst" type="button" style="background:none;color:var(--dg);border:1px solid var(--dg)">Empezar mes nuevo</button></div></div>
+<div id="rows"></div>
+</div>
+</main>
+<div id="mod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:16px;z-index:50"><div class="card" style="max-width:360px;margin:0"><p id="mm" style="margin-top:0"></p><div style="display:flex;gap:8px;justify-content:flex-end"><button id="mn" type="button" style="background:none;color:var(--tx);border:1px solid var(--bd)">Cancelar</button><button id="my" type="button">Aceptar</button></div></div></div>
+<script>
+var KEY="ventas-v1",ventas=[],alOpen=false;
+function ask(msg,ok){var m=$("mod");$("mm").textContent=msg;m.style.display="flex";$("mn").style.display=ok?"":"none";$("my").textContent=ok?"Aceptar":"Entendido";$("my").onclick=function(){m.style.display="none";if(ok)ok()};$("mn").onclick=function(){m.style.display="none"}}
+var fmt=new Intl.NumberFormat("es-SV",{style:"currency",currency:"USD"});
+var $=function(i){return document.getElementById(i)};
+function hoy(){var d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+try{ventas=JSON.parse(localStorage.getItem(KEY))||[]}catch(e){ventas=[]}
+if(!ventas.length){try{var o=JSON.parse(localStorage.getItem("ventas-v2"));if(o&&o.v){ventas=o.v;localStorage.setItem(KEY,JSON.stringify(ventas))}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(ventas))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function pend(){return ventas.filter(function(v){return v.listo===false})}
+function tot(v){return v.total!=null?v.total:v.cant*v.prec}
+function render(){
+var h=hoy(),m=h.slice(0,7),a=0,b=0,c=0;
+ventas.forEach(function(v){var t=tot(v);c+=t;if(v.fecha===h)a+=t;if(v.fecha.slice(0,7)===m)b+=t});
+$("sHoy").textContent=fmt.format(a);$("sMes").textContent=fmt.format(b);$("sTot").textContent=fmt.format(c);
+var pd=pend();var s=ventas.slice().sort(function(x,y){return (y.listo===false)-(x.listo===false)||y.fecha.localeCompare(x.fecha)||y.id-x.id});var al=$("al");al.style.display=pd.length?"block":"none";al.innerHTML=pd.length?"<div class=ah><b>⚠️ "+pd.length+(pd.length>1?" ventas sin preparar":" venta sin preparar")+"</b><span>"+(alOpen?"Ocultar ▲":"Ver lista ▼")+"</span></div>"+(alOpen?"<div class=all>"+pd.map(function(v){return"<div>• "+esc(v.prod)+(v.cli?" — "+esc(v.cli):"")+(v.ent?" ("+esc(v.ent)+")":"")+"</div>"}).join("")+"</div>":""):"";document.title=(pd.length?"("+pd.length+") ":"")+"Registro de ventas";
+function f(l,x){return x?"<div><small>"+l+"</small><b>"+esc(x)+"</b></div>":""}
+$("rows").innerHTML=s.length?s.map(function(v){
+return "<div class='vc"+(v.listo===false?" pend":"")+"'>"+(v.listo===false?"<span class='st p'>⏳ Pendiente de preparar</span>":v.listo===true?"<span class='st r'>✓ Listo para entregar</span>":"")+"<div class=vh><div><b>"+esc(v.prod)+"</b></div><span><small>Total a cobrar</small>"+fmt.format(tot(v))+"</span>"+((v.cli||v.tel)?"<div class=clr>"+(v.cli?"<div>"+esc(v.cli)+"</div>":"")+(v.tel?"<div>"+esc(v.tel)+"</div>":"")+"</div>":"")+"</div>"+(v.com?"<div class=vc2><small>Comentarios</small><b>"+esc(v.com)+"</b></div>":"")+"<div class=vg>"+f("Fecha",v.fecha)+f("Cantidad",v.cant)+f("Entrega",v.ent||"-")+f("Encomendista",v.enc)+f("Pago",v.pago)+"</div>"+"<div class=vd>"+(v.listo===false?"<button class=okb data-ok="+v.id+" data-val=1>Listo para entregar</button>":v.listo===true?"<button class=del data-ok="+v.id+" data-val=0 style='color:var(--mut)'>Volver a pendiente</button>":"<span></span>")+"<span><button class=del data-ed="+v.id+" style='color:var(--ac)'>Editar</button><button class=del data-id="+v.id+">Eliminar</button></span></div></div>"
+}).join(""):"<div class=empty>Aún no hay ventas registradas.</div>";
+}
+$("fecha").value=hoy();
+$("f").addEventListener("submit",function(e){
+e.preventDefault();var er=$("err"),pt=parseFloat(String($("prec").value).replace(/,(?=\d{3}(\D|$))/g,"").replace(",",".")),ct=parseInt($("cant").value,10);var msg=!$("prod").value.trim()?"Escribe el producto.":!(ct>=1)?"Escribe la cantidad.":!(pt>=0)?"Escribe el precio total.":!$("fecha").value?"Elige la fecha.":$("ent").value==="Encomendista"&&!getEnc()?"Elige el encomendista (C807 o Pedidos Express).":"";er.textContent=msg;er.style.display=msg?"block":"none";if(msg)return;
+var rec={id:Date.now(),prod:$("prod").value.trim(),cant:ct,total:pt,fecha:$("fecha").value,pago:$("pago").value,ent:$("ent").value,cli:$("cli").value.trim(),tel:$("tel").value.trim(),com:$("com").value.trim(),enc:$("ent").value==="Encomendista"?getEnc():"",listo:false};if(edId){var o=ventas.filter(function(v){return v.id==edId})[0];if(o){rec.id=o.id;rec.listo=o.listo}ventas=ventas.map(function(v){return v.id==edId?rec:v});stopEd()}else ventas.push(rec);
+save();$("prod").value="";$("prec").value="";$("cant").value=1;$("cli").value="";$("tel").value="";$("com").value="";$("prod").focus();render();
+});
+$("rows").addEventListener("click",function(e){
+var t=e.target,ed=t.getAttribute&&t.getAttribute("data-ed");if(ed){var v=ventas.filter(function(x){return x.id==ed})[0];if(v){edId=v.id;$("prod").value=v.prod;$("cant").value=v.cant;$("prec").value=tot(v);$("fecha").value=v.fecha;setSel("pago",v.pago);setSel("ent",v.ent||"Plaza Centro");toggleEnc();setEnc(v.enc||"");$("cli").value=v.cli||"";$("tel").value=v.tel||"";$("com").value=v.com||"";$("sb").textContent="Guardar cambios";$("cx").style.display="";$("err").style.display="none";$("f").scrollIntoView({behavior:"smooth"});$("prod").focus()}return}var ok=t.getAttribute&&t.getAttribute("data-ok");if(ok){ventas.forEach(function(v){if(v.id==ok)v.listo=t.getAttribute("data-val")==="1"});save();render();return}
+var id=e.target.getAttribute&&e.target.getAttribute("data-id");
+if(id)ask("¿Eliminar esta venta?",function(){ventas=ventas.filter(function(v){return v.id!=id});save();render()})
+});
+$("rst").onclick=function(){
+if(!ventas.length){ask("No hay ventas para borrar.");return}
+ask("Se borrarán las "+ventas.length+" ventas registradas para empezar el mes en cero."+(pend().length?" ATENCIÓN: "+pend().length+" siguen sin preparar.":"")+" ¿Ya descargaste el Excel de este mes? Esto no se puede deshacer.",function(){ventas=[];save();render()})
+};
+$("al").addEventListener("click",function(){alOpen=!alOpen;render()});
+var edId=null;
+function getEnc(){var r=document.querySelector("input[name=enc]:checked");return r?r.value:""}
+function setEnc(x){[].forEach.call(document.querySelectorAll("input[name=enc]"),function(r){r.checked=r.value===x})}
+function toggleEnc(){var on=$("ent").value==="Encomendista";$("encw").style.display=on?"":"none";if(!on)setEnc("")}
+$("ent").onchange=toggleEnc;
+function setSel(id,val){var s=$(id);if(val&&![].some.call(s.options,function(o){return o.value===val})){var op=new Option(val);op.setAttribute("data-x","1");s.add(op)}s.value=val}
+function stopEd(){edId=null;$("sb").textContent="Registrar venta";$("cx").style.display="none";["prod","prec","cli","tel","com"].forEach(function(i){$(i).value=""});$("cant").value=1;$("fecha").value=hoy();document.querySelectorAll("option[data-x]").forEach(function(o){o.remove()});$("pago").selectedIndex=0;$("ent").selectedIndex=0;toggleEnc();$("err").style.display="none"}
+$("cx").onclick=stopEd;
+function q(s){s=String(s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+$("exp").onclick=async function(){
+var rows=[["Fecha","Producto","Cantidad","Total a cobrar","Entrega","Encomendista","Pago","Cliente","Contacto","Comentarios","Estado"]];
+ventas.slice().sort(function(x,y){return x.fecha.localeCompare(y.fecha)||x.id-y.id}).forEach(function(v){
+rows.push([v.fecha,v.prod,v.cant,tot(v).toFixed(2),v.ent||"",v.enc||"",v.pago,v.cli||"",v.tel||"",v.com||"",v.listo===false?"Pendiente":v.listo===true?"Listo para entregar":""])});
+var csv="\ufeff"+rows.map(function(r){return r.map(q).join(",")}).join("\n");
+try{var d=await claude.use("downloads");if(!d)throw 0;await d.save({filename:"ventas-"+hoy()+".csv",data:csv})}
+catch(err){if(err&&err.code==="declined")return;ask("No se pudo descargar desde aquí. Abre la página en tu navegador e inténtalo de nuevo.")}
+};
+render();
+</script>
+</body>
+</html>
