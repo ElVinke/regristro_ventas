@@ -143,8 +143,8 @@ var rows=[["Fecha","Producto","Cantidad","Total a cobrar","Entrega","Encomendist
 ventas.slice().sort(function(x,y){return x.fecha.localeCompare(y.fecha)||x.id-y.id}).forEach(function(v){
 rows.push([v.fecha,v.prod,v.cant,tot(v).toFixed(2),v.ent||"",v.enc||"",v.pago,v.cli||"",v.tel||"",v.com||"",v.listo===false?"Pendiente":v.listo===true?"Listo para entregar":""])});
 var csv="\ufeff"+rows.map(function(r){return r.map(q).join(",")}).join("\n");
-try{var d=await claude.use("downloads");if(!d)throw 0;await d.save({filename:"ventas-"+hoy()+".csv",data:csv})}
-catch(err){if(err&&err.code==="declined")return;ask("No se pudo descargar desde aquí. Abre la página en tu navegador e inténtalo de nuevo.")}
+try{var bl=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="ventas-"+hoy()+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+catch(err){ask("No se pudo descargar el archivo. Inténtalo de nuevo.")}
 };
 render();
 </script>
