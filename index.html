@@ -37,10 +37,10 @@ td.n,th.n{text-align:right}
 .vc{border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--bg)}
 .vh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
 .vh b{font-size:1.1rem}
-.vh span{font-size:1.3rem;font-weight:700;color:var(--ac);white-space:nowrap;text-align:right}
+.vh span{order:3;margin-left:auto;font-size:1.3rem;font-weight:700;color:var(--ac);white-space:nowrap;text-align:right}
 .vh span small{display:block;font-size:.7rem;font-weight:600;color:var(--mut)}
-.clr{flex:0 0 100%;display:flex;flex-wrap:wrap;gap:2px 16px;font-size:1.05rem;font-weight:600;margin-top:-2px}
-.vh>div:first-child{flex:1;min-width:0}
+.clr{flex:1;min-width:0;order:2;display:flex;flex-wrap:wrap;gap:2px 16px;font-size:1.05rem;font-weight:600}
+.vh>div:first-child{flex:0 0 100%;order:1}
 .vg{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
 .vg small,.vc2 small{display:block;color:var(--mut);font-size:.75rem}
 .vg b,.vc2 b{font-weight:600;word-break:break-word}
@@ -58,6 +58,9 @@ td.n,th.n{text-align:right}
 .st.p{background:#fef3c7;color:#78350f}
 .st.r{background:#d1fae5;color:#065f46}
 .okb{background:#16a34a;color:#fff}
+.pn{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.fe{font-style:normal;font-size:.75rem;font-weight:700;background:#e0f2fe;color:#075985;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.rg{font-size:.75rem;color:var(--mut);margin-top:8px}
 @media(max-width:480px){.stats{grid-template-columns:1fr}}
 .lg{max-width:460px;margin:5vh auto 0;padding:16px}
 .lg .card{display:grid;grid-template-columns:1fr;gap:18px;padding:24px}
@@ -100,7 +103,7 @@ td.n,th.n{text-align:right}
 <div class="full"><label for="prod">Producto o servicio</label><input id="prod" required placeholder="Ej. Camisa azul"></div>
 <div><label for="cant">Cantidad</label><input id="cant" type="number" min="1" step="1" value="1" required></div>
 <div><label for="prec">Precio total ($)</label><input id="prec" type="text" inputmode="decimal" placeholder="0.00"></div>
-<div><label for="fecha">Fecha</label><input id="fecha" type="date" required></div>
+<div><label for="fecha">Fecha para entrega</label><input id="fecha" type="date" required></div>
 <div><label for="pago">Pago</label><select id="pago"><option>Efectivo</option><option>Transferencia</option></select></div>
 <div><label for="cli">Nombre del cliente</label><input id="cli"></div>
 <div><label for="tel">Número de contacto</label><input id="tel" type="tel" inputmode="tel"></div>
@@ -191,16 +194,22 @@ try{if($("rc").checked)localStorage.setItem("ventas-correo",$("em").value.trim()
 });
 $("out").onclick=function(){sb.auth.signOut()};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function regD(v){return v.id>1e12?new Date(v.id):null}
+function dReg(v){var d=regD(v);return d?new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10):v.fecha}
+function fF(s){var p=String(s||"").split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:(s||"")}
+function fC(s){var p=String(s||"").split("-");return p.length===3?(p[0]===String(new Date().getFullYear())?p[2]+"/"+p[1]:p[2]+"/"+p[1]+"/"+p[0]):(s||"")}
+function fR(v){var d=regD(v);return d?d.toLocaleString("es-SV",{day:"2-digit",month:"2-digit",year:"numeric",hour:"numeric",minute:"2-digit"}):""}
+function fE(v){var d=regD(v);if(!d)return"";var z=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString();return z.slice(0,10)+" "+z.slice(11,16)}
 function pend(){return ventas.filter(function(v){return v.listo===false})}
 function tot(v){return v.total!=null?v.total:v.cant*v.prec}
 function render(){
 var h=hoy(),m=h.slice(0,7),a=0,b=0,c=0;
-ventas.forEach(function(v){var t=tot(v);c+=t;if(v.fecha===h)a+=t;if(v.fecha.slice(0,7)===m)b+=t});
+ventas.forEach(function(v){var t=tot(v),d=dReg(v);c+=t;if(d===h)a+=t;if(d.slice(0,7)===m)b+=t});
 $("sHoy").textContent=fmt.format(a);$("sMes").textContent=fmt.format(b);$("sTot").textContent=fmt.format(c);
 var pd=pend();var s=ventas.slice().sort(function(x,y){return (y.listo===false)-(x.listo===false)||y.fecha.localeCompare(x.fecha)||y.id-x.id});var al=$("al");al.style.display=pd.length?"block":"none";al.innerHTML=pd.length?"<div class=ah><b>⚠️ "+pd.length+(pd.length>1?" ventas sin preparar":" venta sin preparar")+"</b><span>"+(alOpen?"Ocultar ▲":"Ver lista ▼")+"</span></div>"+(alOpen?"<div class=all>"+pd.map(function(v){return"<div>• "+esc(v.prod)+(v.cli?" — "+esc(v.cli):"")+(v.ent?" ("+esc(v.ent)+")":"")+"</div>"}).join("")+"</div>":""):"";document.title=(pd.length?"("+pd.length+") ":"")+"Registro de ventas";
 function f(l,x){return x?"<div><small>"+l+"</small><b>"+esc(x)+"</b></div>":""}
 $("rows").innerHTML=s.length?s.map(function(v){
-return "<div class='vc"+(v.listo===false?" pend":"")+"'>"+(v.listo===false?"<span class='st p'>⏳ Pendiente de preparar</span>":v.listo===true?"<span class='st r'>✓ Listo para entregar</span>":"")+"<div class=vh><div><b>"+esc(v.prod)+"</b></div><span><small>Total a cobrar</small>"+fmt.format(tot(v))+"</span>"+((v.cli||v.tel)?"<div class=clr>"+(v.cli?"<div>"+esc(v.cli)+"</div>":"")+(v.tel?"<div>"+esc(v.tel)+"</div>":"")+"</div>":"")+"</div>"+(v.com?"<div class=vc2><small>Comentarios</small><b>"+esc(v.com)+"</b></div>":"")+"<div class=vg>"+f("Fecha",v.fecha)+f("Cantidad",v.cant)+f("Entrega",v.ent||"-")+f("Encomendista",v.enc)+f("Pago",v.pago)+f("Registrado por",v.por)+"</div>"+"<div class=vd>"+(v.listo===false?"<button class=okb data-ok="+v.id+" data-val=1>Listo para entregar</button>":v.listo===true?"<button class=del data-ok="+v.id+" data-val=0 style='color:var(--mut)'>Volver a pendiente</button>":"<span></span>")+"<span><button class=del data-ed="+v.id+" style='color:var(--ac)'>Editar</button><button class=del data-id="+v.id+">Eliminar</button></span></div></div>"
+return "<div class='vc"+(v.listo===false?" pend":"")+"'>"+(v.listo===false?"<span class='st p'>⏳ Pendiente de preparar</span>":v.listo===true?"<span class='st r'>✓ Listo para entregar</span>":"")+"<div class=vh><div class=pn><b>"+esc(v.prod)+"</b><em class=fe>Fecha para entrega: "+fC(v.fecha)+"</em></div><span><small>Total a cobrar</small>"+fmt.format(tot(v))+"</span>"+((v.cli||v.tel)?"<div class=clr>"+(v.cli?"<div>"+esc(v.cli)+"</div>":"")+(v.tel?"<div>"+esc(v.tel)+"</div>":"")+"</div>":"")+"</div>"+(v.com?"<div class=vc2><small>Comentarios</small><b>"+esc(v.com)+"</b></div>":"")+"<div class=vg>"+f("Cantidad",v.cant)+f("Entrega",v.ent||"-")+f("Encomendista",v.enc)+f("Pago",v.pago)+f("Registrado por",v.por)+"</div>"+(fR(v)?"<div class=rg>Registrada el "+fR(v)+"</div>":"")+"<div class=vd>"+(v.listo===false?"<button class=okb data-ok="+v.id+" data-val=1>Listo para entregar</button>":v.listo===true?"<button class=del data-ok="+v.id+" data-val=0 style='color:var(--mut)'>Volver a pendiente</button>":"<span></span>")+"<span><button class=del data-ed="+v.id+" style='color:var(--ac)'>Editar</button><button class=del data-id="+v.id+">Eliminar</button></span></div></div>"
 }).join(""):"<div class=empty>Aún no hay ventas registradas.</div>";
 }
 $("fecha").value=hoy();
@@ -229,9 +238,9 @@ function stopEd(){edId=null;$("sb").textContent="Registrar venta";$("cx").style.
 $("cx").onclick=stopEd;
 function q(s){s=String(s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
 $("exp").onclick=async function(){
-var rows=[["Fecha","Producto","Cantidad","Total a cobrar","Entrega","Encomendista","Pago","Cliente","Contacto","Comentarios","Estado","Registrado por"]];
+var rows=[["Fecha para entrega","Producto","Cantidad","Total a cobrar","Entrega","Encomendista","Pago","Cliente","Contacto","Comentarios","Estado","Registrado por","Fecha de registro"]];
 ventas.slice().sort(function(x,y){return x.fecha.localeCompare(y.fecha)||x.id-y.id}).forEach(function(v){
-rows.push([v.fecha,v.prod,v.cant,tot(v).toFixed(2),v.ent||"",v.enc||"",v.pago,v.cli||"",v.tel||"",v.com||"",v.listo===false?"Pendiente":v.listo===true?"Listo para entregar":"",v.por||""])});
+rows.push([v.fecha,v.prod,v.cant,tot(v).toFixed(2),v.ent||"",v.enc||"",v.pago,v.cli||"",v.tel||"",v.com||"",v.listo===false?"Pendiente":v.listo===true?"Listo para entregar":"",v.por||"",fE(v)])});
 var csv="\ufeff"+rows.map(function(r){return r.map(q).join(",")}).join("\n");
 try{var bl=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="ventas-"+hoy()+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
 catch(err){ask("No se pudo descargar el archivo. Inténtalo de nuevo.")}
